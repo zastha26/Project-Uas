@@ -545,5 +545,32 @@ export default function AuthPage() {
 }
 
 ===============================================
+FILE: app/edukasi/panduan-pemilahan-sampah/page.tsx
+===============================================
+
+Artikel detail: Panduan Pemilahan Sampah di Rumah
+- Path: /edukasi/panduan-pemilahan-sampah
+- Konten: Panduan lengkap pemilahan sampah organik dan anorganik
+- Fitur: Back button, navbar, footer
+
+===============================================
+FILE: app/edukasi/dampak-sampah-plastik-laut/page.tsx
+===============================================
+
+Artikel detail: Dampak Sampah Plastik terhadap Laut
+- Path: /edukasi/dampak-sampah-plastik-laut
+- Konten: Data dan solusi dampak plastik terhadap ekosistem laut
+- Fitur: Back button, navbar, footer, statistik visual
+
+===============================================
+FILE: app/edukasi/data-pengelolaan-sampah-indonesia/page.tsx
+===============================================
+
+Artikel detail: Data Pengelolaan Sampah di Indonesia
+- Path: /edukasi/data-pengelolaan-sampah-indonesia
+- Konten: Statistik volume sampah, komposisi, tingkat daur ulang
+- Fitur: Back button, navbar, footer, tabel data
+
+===============================================
 END OF FILES
 ===============================================
