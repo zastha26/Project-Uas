@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navbar */}
@@ -33,12 +38,43 @@ export default function Home() {
               <Link href="/auth" className="hidden sm:inline-flex bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full font-medium transition-all hover:shadow-lg hover:shadow-green-500/25">
                 Masuk
               </Link>
-              <Link href="/auth" className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-full font-medium transition-all hover:shadow-lg">
+              <Link href="/auth/register" className="hidden sm:inline-flex bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-full font-medium transition-all hover:shadow-lg">
                 Daftar
               </Link>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white">
+            <div className="px-4 py-4 space-y-2">
+              <a href="#beranda" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">Beranda</a>
+              <a href="#tentang" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">Tentang Kami</a>
+              <a href="#visi-misi" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">Visi & Misi</a>
+              <a href="#edukasi" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">Edukasi</a>
+              <a href="#harga" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">Harga Sampah</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">FAQ</a>
+              <a href="#kontak" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 rounded-xl font-medium">Kontak</a>
+              <div className="pt-2 border-t border-gray-100 flex gap-3">
+                <Link href="/auth" onClick={() => setMobileMenuOpen(false)} className="flex-1 text-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full font-medium transition-all">
+                  Masuk
+                </Link>
+                <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} className="flex-1 text-center bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-full font-medium transition-all">
+                  Daftar
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -71,9 +107,6 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
-                <Link href="/auth" className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all hover:shadow-xl hover:shadow-green-500/25 hover:-translate-y-0.5">
-                  Mulai Sekarang
-                </Link>
                 <a href="#tentang" className="flex items-center gap-2 text-gray-600 hover:text-green-600 px-8 py-4 rounded-full font-semibold text-lg transition-colors border border-gray-200 hover:border-green-200">
                   Pelajari Lebih Lanjut
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -494,7 +527,7 @@ export default function Home() {
             </h3>
 
             <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all group">
+              <Link href="/edukasi/panduan-pemilahan-sampah" className="block bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all group">
                 <div className="h-48 bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
                   <svg className="w-20 h-20 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -509,9 +542,9 @@ export default function Home() {
                     5 menit baca
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all group">
+              <Link href="/edukasi/dampak-sampah-plastik-laut" className="block bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all group">
                 <div className="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
                   <svg className="w-20 h-20 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
@@ -526,9 +559,9 @@ export default function Home() {
                     7 menit baca
                   </div>
                 </div>
-              </div>
+              </Link>
 
-              <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all group">
+              <Link href="/edukasi/data-pengelolaan-sampah-indonesia" className="block bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all group">
                 <div className="h-48 bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
                   <svg className="w-20 h-20 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
@@ -543,7 +576,7 @@ export default function Home() {
                     6 menit baca
                   </div>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
 
@@ -916,7 +949,7 @@ export default function Home() {
           <p className="text-green-100 text-lg mb-8 max-w-2xl mx-auto">
             Bergabunglah dengan ribuan masyarakat yang sudah merasakan kemudahan pengelolaan sampah bersama Bank Sampah.
           </p>
-          <Link href="/auth" className="inline-flex items-center gap-2 bg-white text-green-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-green-50 transition-all hover:shadow-xl hover:-translate-y-0.5">
+          <Link href="/auth/register" className="inline-flex items-center gap-2 bg-white text-green-600 px-8 py-4 rounded-full font-semibold text-lg hover:bg-green-50 transition-all hover:shadow-xl hover:-translate-y-0.5">
             Daftar Sekarang
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -946,7 +979,7 @@ export default function Home() {
                 </svg>
               </div>
               <h4 className="font-bold text-gray-900 mb-2">Alamat</h4>
-              <p className="text-sm text-gray-600">Jl. Lingkungan Hijau No. 12<br />Kelurahan Sukamaju<br />Kota Bandung, Jawa Barat 40123</p>
+              <p className="text-sm text-gray-600">Jl. Lingkungan Hijau No. 12<br />Kelurahan Gunung Guntur<br />Kota Balikpapan, Kalimantan Timur 76111</p>
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
@@ -1039,7 +1072,7 @@ export default function Home() {
               <h4 className="text-white font-bold mb-4">Newsletter</h4>
               <p className="text-sm mb-4">Dapatkan informasi terbaru seputar Bank Sampah.</p>
               <div className="flex">
-                <input type="email" placeholder="Email Anda" className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-l-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-500" />
+                <input type="email" placeholder="Email Anda" className="flex-1 px-4 py-2 bg-gray-800 border border-cdgray-700 rounded-l-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-500" />
                 <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-r-lg font-medium text-sm transition-colors">
                   Kirim
                 </button>
