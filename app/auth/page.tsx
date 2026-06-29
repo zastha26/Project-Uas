@@ -1,12 +1,58 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function AuthPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [regAgreed, setRegAgreed] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [regError, setRegError] = useState("");
+  const [regSuccess, setRegSuccess] = useState(false);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    if (!loginEmail || !loginPassword) {
+      setLoginError("Email dan password harus diisi");
+      return;
+    }
+    router.push("/auth/dashboard");
+  };
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError("");
+    setRegSuccess(false);
+    if (!regName || !regEmail || !regPassword || !regConfirmPassword) {
+      setRegError("Semua field harus diisi");
+      return;
+    }
+    if (regPassword !== regConfirmPassword) {
+      setRegError("Password dan konfirmasi password tidak cocok");
+      return;
+    }
+    if (!regAgreed) {
+      setRegError("Anda harus menyetujui Syarat & Ketentuan");
+      return;
+    }
+    setRegSuccess(true);
+    setTimeout(() => {
+      setActiveTab("login");
+      setRegSuccess(false);
+    }, 2000);
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -114,7 +160,13 @@ export default function AuthPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Selamat Datang</h2>
               <p className="text-gray-500 mb-8">Masuk ke akun Bank Sampah Anda</p>
 
-              <form className="space-y-5">
+              <form className="space-y-5" onSubmit={handleLogin}>
+                {loginError && (
+                  <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-200">
+                    {loginError}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                   <div className="relative">
@@ -126,6 +178,8 @@ export default function AuthPage() {
                     <input
                       type="email"
                       placeholder="Masukkan email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -142,6 +196,8 @@ export default function AuthPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Masukkan password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
                       className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                     <button
@@ -165,7 +221,12 @@ export default function AuthPage() {
 
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="w-4 h-4 text-green-500 border-gray-300 rounded focus:ring-green-500" />
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 text-green-500 border-gray-300 rounded focus:ring-green-500"
+                    />
                     <span className="text-sm text-gray-600">Ingat saya</span>
                   </label>
                   <a href="#" className="text-sm text-green-600 hover:text-green-700 font-medium">
@@ -174,7 +235,7 @@ export default function AuthPage() {
                 </div>
 
                 <button
-                  type="button"
+                  type="submit"
                   className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-green-500/25"
                 >
                   Masuk
@@ -199,7 +260,18 @@ export default function AuthPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Buat Akun</h2>
               <p className="text-gray-500 mb-8">Daftar sebagai nasabah Bank Sampah</p>
 
-              <form className="space-y-5">
+              <form className="space-y-5" onSubmit={handleRegister}>
+                {regError && (
+                  <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-200">
+                    {regError}
+                  </div>
+                )}
+                {regSuccess && (
+                  <div className="bg-green-50 text-green-600 text-sm p-3 rounded-xl border border-green-200">
+                    Registrasi berhasil! Mengalihkan ke halaman login...
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
                   <div className="relative">
@@ -211,6 +283,8 @@ export default function AuthPage() {
                     <input
                       type="text"
                       placeholder="Masukkan nama lengkap"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -227,6 +301,8 @@ export default function AuthPage() {
                     <input
                       type="email"
                       placeholder="Masukkan email"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                   </div>
@@ -243,6 +319,8 @@ export default function AuthPage() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Buat password"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
                       className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                     <button
@@ -275,6 +353,8 @@ export default function AuthPage() {
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Ulangi password"
+                      value={regConfirmPassword}
+                      onChange={(e) => setRegConfirmPassword(e.target.value)}
                       className="w-full pl-12 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     />
                     <button
@@ -297,7 +377,12 @@ export default function AuthPage() {
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <input type="checkbox" className="w-4 h-4 mt-0.5 text-green-500 border-gray-300 rounded focus:ring-green-500" />
+                  <input
+                    type="checkbox"
+                    checked={regAgreed}
+                    onChange={(e) => setRegAgreed(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 text-green-500 border-gray-300 rounded focus:ring-green-500"
+                  />
                   <span className="text-sm text-gray-600">
                     Saya setuju dengan{" "}
                     <a href="#" className="text-green-600 hover:text-green-700 font-medium">Syarat & Ketentuan</a>
@@ -305,7 +390,7 @@ export default function AuthPage() {
                 </div>
 
                 <button
-                  type="button"
+                  type="submit"
                   className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg hover:shadow-green-500/25"
                 >
                   Daftar
