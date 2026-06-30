@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const [tarikError, setTarikError] = useState("");
 
   const handleLogout = () => {
-    router.push("/auth");
+    router.push("/auth/dashboard");
   };
 
   const handleSaveProfile = () => {
