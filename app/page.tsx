@@ -107,6 +107,9 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
+                <Link href="/auth" className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all hover:shadow-xl hover:shadow-green-500/25 hover:-translate-y-0.5">
+                  Mulai Sekarang
+                </Link>
                 <a href="#tentang" className="flex items-center gap-2 text-gray-600 hover:text-green-600 px-8 py-4 rounded-full font-semibold text-lg transition-colors border border-gray-200 hover:border-green-200">
                   Pelajari Lebih Lanjut
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1072,7 +1075,7 @@ export default function Home() {
               <h4 className="text-white font-bold mb-4">Newsletter</h4>
               <p className="text-sm mb-4">Dapatkan informasi terbaru seputar Bank Sampah.</p>
               <div className="flex">
-                <input type="email" placeholder="Email Anda" className="flex-1 px-4 py-2 bg-gray-800 border border-cdgray-700 rounded-l-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-500" />
+                <input type="email" placeholder="Email Anda" className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-l-lg text-white placeholder-gray-500 text-sm focus:outline-none focus:border-green-500" />
                 <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-r-lg font-medium text-sm transition-colors">
                   Kirim
                 </button>
