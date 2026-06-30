@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, FormEvent } from "react";
 
 export default function AuthPage(): import("react").JSX.Element {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -17,13 +18,26 @@ export default function AuthPage(): import("react").JSX.Element {
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
   const [regAgreed, setRegAgreed] = useState(false);
-  const [loginError] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [regError, setRegError] = useState("");
   const [regSuccess, setRegSuccess] = useState(false);
 
   const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Handle login logic
+    setLoginError("");
+    const users = JSON.parse(localStorage.getItem("banksampah_users") || "[]");
+    const found = users.find(
+      (u: { nama: string; email: string; password: string }) =>
+        (u.email.toLowerCase() === loginEmail.toLowerCase() ||
+         u.nama.toLowerCase() === loginEmail.toLowerCase()) &&
+        u.password === loginPassword
+    );
+    if (!found) {
+      setLoginError("Nama/email atau password salah");
+      return;
+    }
+    localStorage.setItem("banksampah_current_user", JSON.stringify(found));
+    router.push("/dashboard-user");
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -42,10 +56,34 @@ export default function AuthPage(): import("react").JSX.Element {
       setRegError("Anda harus menyetujui Syarat & Ketentuan");
       return;
     }
+
+    const users = JSON.parse(localStorage.getItem("banksampah_users") || "[]");
+    const exists = users.find((u: { email: string }) => u.email === regEmail);
+    if (exists) {
+      setRegError("Email sudah terdaftar");
+      return;
+    }
+
+    const newUser = {
+      nama: regName,
+      email: regEmail,
+      password: regPassword,
+      telepon: "",
+      alamat: "",
+      tanggalGabung: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+    };
+    users.push(newUser);
+    localStorage.setItem("banksampah_users", JSON.stringify(users));
+
     setRegSuccess(true);
     setTimeout(() => {
       setActiveTab("login");
       setRegSuccess(false);
+      setRegName("");
+      setRegEmail("");
+      setRegPassword("");
+      setRegConfirmPassword("");
+      setRegAgreed(false);
     }, 2000);
   };
 
@@ -137,16 +175,16 @@ export default function AuthPage(): import("react").JSX.Element {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email atau Nama</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       </svg>
                     </div>
                     <input
-                      type="email"
-                      placeholder="Masukkan email"
+                      type="text"
+                      placeholder="Masukkan email atau nama"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"

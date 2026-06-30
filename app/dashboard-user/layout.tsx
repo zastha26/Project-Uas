@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 const menuItems = [
   {
     label: "Dashboard",
-    href: "/dashboard",
+    href: "/dashboard-user",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
@@ -16,7 +16,7 @@ const menuItems = [
   },
   {
     label: "Setor",
-    href: "/dashboard/setor-sampah",
+    href: "/dashboard-user/setor-sampah",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -25,7 +25,7 @@ const menuItems = [
   },
   {
     label: "Riwayat",
-    href: "/dashboard/riwayat",
+    href: "/dashboard-user/riwayat",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -34,7 +34,7 @@ const menuItems = [
   },
   {
     label: "Saldo",
-    href: "/dashboard/saldo",
+    href: "/dashboard-user/saldo",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -43,18 +43,54 @@ const menuItems = [
   },
   {
     label: "Profil",
-    href: "/dashboard/profil",
+    href: "/dashboard-user/profil",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
       </svg>
     ),
   },
+  {
+    label: "Lokasi",
+    href: "/dashboard-user/lokasi",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+      </svg>
+    ),
+  },
 ];
+
+interface UserData {
+  nama: string;
+  email: string;
+  telepon?: string;
+  alamat?: string;
+  tanggalGabung?: string;
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("banksampah_current_user");
+    if (!stored) {
+      router.push("/auth");
+      return;
+    }
+    setUser(JSON.parse(stored));
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("banksampah_current_user");
+    router.push("/");
+  };
+
+  const initials = user ? user.nama.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2) : "?";
 
   return (
     <div className="min-h-screen bg-gray-50/80">
@@ -72,12 +108,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors">
-            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -114,11 +144,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="p-4 mx-4 mt-4 bg-gray-50 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">SR</span>
+                  <span className="text-white font-bold text-sm">{initials}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-900 text-sm truncate">Siti Rahayu</div>
-                  <div className="text-xs text-gray-500 truncate">siti.rahayu@email.com</div>
+                  <div className="font-semibold text-gray-900 text-sm truncate">{user?.nama || "..."}</div>
+                  <div className="text-xs text-gray-500 truncate">{user?.email || "..."}</div>
                 </div>
               </div>
             </div>
@@ -142,12 +172,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </nav>
 
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-              <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all">
+              <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                 </svg>
-                Kembali ke Beranda
-              </Link>
+                Keluar
+              </button>
             </div>
           </div>
         </div>
@@ -173,10 +203,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="p-4 mx-4 mt-4 bg-gray-50 rounded-xl">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">SR</span>
+                <span className="text-white font-bold text-sm">{initials}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold text-gray-900 text-sm truncate">Siti Rahayu</div>
+                <div className="font-semibold text-gray-900 text-sm truncate">{user?.nama || "..."}</div>
                 <div className="text-xs text-gray-500 truncate">Nasabah Aktif</div>
               </div>
             </div>
@@ -203,12 +233,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           <div className="p-4 border-t border-gray-100">
-            <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all">
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
               </svg>
-              Kembali ke Beranda
-            </Link>
+              Keluar
+            </button>
           </div>
         </aside>
 

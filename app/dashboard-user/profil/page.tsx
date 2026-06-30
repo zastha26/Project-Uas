@@ -1,27 +1,105 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+interface UserData {
+  nama: string;
+  email: string;
+  telepon: string;
+  alamat: string;
+  tanggalGabung: string;
+}
+
+interface Transaction {
+  id: number;
+  tanggal: string;
+  items: { nama: string; berat: number; harga: number; subtotal: number }[];
+  total: number;
+  status: string;
+  tipe: string;
+  userEmail: string;
+}
+
+const defaultUser: UserData = {
+  nama: "",
+  email: "",
+  telepon: "",
+  alamat: "",
+  tanggalGabung: "-",
+};
 
 export default function ProfilPage() {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    nama: "Siti Rahayu",
-    email: "siti.rahayu@email.com",
-    telepon: "081234567890",
-    alamat: "Jl. Merdeka No. 123, Kel. Sukamaju, Kota Bandung",
-    tanggalGabung: "15 Januari 2026",
-  });
+  const [formData, setFormData] = useState<UserData>(defaultUser);
+  const [stats, setStats] = useState({ totalTransaksi: 0, totalBerat: 0, saldo: 0, bulanGabung: "-" });
+
+  useEffect(() => {
+    const stored = localStorage.getItem("banksampah_current_user");
+    if (!stored) { router.push("/auth"); return; }
+    const user = JSON.parse(stored);
+    setFormData({
+      nama: user.nama || "",
+      email: user.email || "",
+      telepon: user.telepon || "",
+      alamat: user.alamat || "",
+      tanggalGabung: user.tanggalGabung || "-",
+    });
+
+    // Hitung statistik dari transaksi
+    const allTransactions: Transaction[] = JSON.parse(localStorage.getItem("banksampah_transactions") || "[]");
+    const myTransactions = allTransactions.filter((t) => t.userEmail === user.email);
+    const totalBerat = myTransactions
+      .filter((t) => t.tipe === "setoran")
+      .reduce((acc, t) => acc + t.items.reduce((a, i) => a + i.berat, 0), 0);
+
+    // Hitung bulan bergabung
+    let bulanGabung = "-";
+    if (user.tanggalGabung) {
+      const parts = user.tanggalGabung.split(" ");
+      if (parts.length >= 3) {
+        const monthNames: Record<string, string> = {
+          "Januari": "Jan", "Februari": "Feb", "Maret": "Mar", "April": "Apr",
+          "Mei": "Mei", "Juni": "Jun", "Juli": "Jul", "Agustus": "Agu",
+          "September": "Sep", "Oktober": "Okt", "November": "Nov", "Desember": "Des",
+        };
+        const month = monthNames[parts[1]] || parts[1];
+        const year = parts[2];
+        bulanGabung = `${month} ${year}`;
+      }
+    }
+
+    setStats({
+      totalTransaksi: myTransactions.length,
+      totalBerat,
+      saldo: user.saldo || 0,
+      bulanGabung,
+    });
+  }, [router]);
 
   const handleSave = () => {
+    localStorage.setItem("banksampah_current_user", JSON.stringify(formData));
+    const users = JSON.parse(localStorage.getItem("banksampah_users") || "[]");
+    const updated = users.map((u: UserData) =>
+      u.email === formData.email ? { ...u, ...formData } : u
+    );
+    localStorage.setItem("banksampah_users", JSON.stringify(updated));
     setIsEditing(false);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("banksampah_current_user");
+    router.push("/");
+  };
+
+  const initials = formData.nama ? formData.nama.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2) : "?";
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-2xl">
@@ -36,18 +114,16 @@ export default function ProfilPage() {
         </div>
       )}
 
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Profil Saya</h1>
         <p className="text-gray-500 mt-1">Kelola informasi akun Anda</p>
       </div>
 
-      {/* Profile Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
             <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <span className="text-3xl font-bold text-white">SR</span>
+              <span className="text-3xl font-bold text-white">{initials}</span>
             </div>
             <div className="text-center sm:text-left text-white">
               <h2 className="text-2xl font-bold">{formData.nama}</h2>
@@ -63,14 +139,8 @@ export default function ProfilPage() {
         <div className="p-6 sm:p-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">Informasi Pribadi</h3>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                isEditing
-                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  : "bg-green-50 text-green-600 hover:bg-green-100"
-              }`}
-            >
+            <button onClick={() => setIsEditing(!isEditing)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isEditing ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-green-50 text-green-600 hover:bg-green-100"}`}>
               {isEditing ? "Batal" : "Edit"}
             </button>
           </div>
@@ -79,74 +149,45 @@ export default function ProfilPage() {
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Nama Lengkap</label>
               {isEditing ? (
-                <input
-                  type="text"
-                  value={formData.nama}
-                  onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
+                <input type="text" value={formData.nama} onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
               ) : (
                 <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900">{formData.nama}</div>
               )}
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
               {isEditing ? (
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
+                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
               ) : (
                 <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900">{formData.email}</div>
               )}
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Telepon</label>
               {isEditing ? (
-                <input
-                  type="tel"
-                  value={formData.telepon}
-                  onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
+                <input type="tel" value={formData.telepon} onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
               ) : (
-                <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900">{formData.telepon}</div>
+                <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900">{formData.telepon || "-"}</div>
               )}
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Alamat</label>
               {isEditing ? (
-                <textarea
-                  value={formData.alamat}
-                  onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                />
+                <textarea value={formData.alamat} onChange={(e) => setFormData({ ...formData, alamat: e.target.value })} rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none" />
               ) : (
-                <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900">{formData.alamat}</div>
+                <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900">{formData.alamat || "-"}</div>
               )}
             </div>
           </div>
 
           {isEditing && (
             <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex-1 py-3 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex-1 py-3 rounded-xl font-semibold text-white bg-green-500 hover:bg-green-600 transition-all"
-              >
-                Simpan Perubahan
-              </button>
+              <button onClick={() => setIsEditing(false)} className="flex-1 py-3 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
+              <button onClick={handleSave} className="flex-1 py-3 rounded-xl font-semibold text-white bg-green-500 hover:bg-green-600 transition-all">Simpan</button>
             </div>
           )}
         </div>
@@ -157,19 +198,19 @@ export default function ProfilPage() {
         <h3 className="text-lg font-bold text-gray-900 mb-4">Statistik Aktivitas</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <div className="text-2xl font-bold text-green-600">15</div>
+            <div className="text-2xl font-bold text-green-600">{stats.totalTransaksi}</div>
             <div className="text-sm text-gray-500">Total Transaksi</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <div className="text-2xl font-bold text-blue-600">248 kg</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.totalBerat.toFixed(1)} kg</div>
             <div className="text-sm text-gray-500">Total Setoran</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <div className="text-2xl font-bold text-purple-600">Rp 1.25jt</div>
-            <div className="text-sm text-gray-500">Total Saldo</div>
+            <div className="text-2xl font-bold text-purple-600">Rp {stats.saldo.toLocaleString("id-ID")}</div>
+            <div className="text-sm text-gray-500">Saldo Saat Ini</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <div className="text-2xl font-bold text-orange-600">5 bulan</div>
+            <div className="text-2xl font-bold text-orange-600">{stats.bulanGabung}</div>
             <div className="text-sm text-gray-500">Bergabung</div>
           </div>
         </div>
@@ -213,7 +254,7 @@ export default function ProfilPage() {
             </svg>
           </button>
 
-          <button className="w-full flex items-center justify-between p-4 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
+          <button onClick={handleLogout} className="w-full flex items-center justify-between p-4 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

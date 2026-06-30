@@ -1,18 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+interface Transaction {
+  id: number;
+  tanggal: string;
+  items: { nama: string; berat: number; harga: number; subtotal: number }[];
+  total: number;
+  status: string;
+  tipe: string;
+  userEmail: string;
+}
+
+function formatTanggal(date: Date) {
+  return date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+}
 
 export default function SaldoPage() {
+  const router = useRouter();
   const [showPenarikan, setShowPenarikan] = useState(false);
   const [jumlahPenarikan, setJumlahPenarikan] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [saldo, setSaldo] = useState(0);
+  const [totalSetoran, setTotalSetoran] = useState(0);
+  const [totalPenarikan, setTotalPenarikan] = useState(0);
+  const [userEmail, setUserEmail] = useState("");
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  const saldo = 1250000;
-  const totalSetoran = 2175000;
-  const totalPenarikan = 925000;
+  useEffect(() => {
+    const stored = localStorage.getItem("banksampah_current_user");
+    if (!stored) { router.push("/auth"); return; }
+    const user = JSON.parse(stored);
+    setUserEmail(user.email);
+    setSaldo(user.saldo || 0);
+
+    const allTransactions = JSON.parse(localStorage.getItem("banksampah_transactions") || "[]");
+    const myTransactions = allTransactions.filter((t: Transaction) => t.userEmail === user.email);
+    setTransactions(myTransactions);
+
+    const ts = myTransactions.filter((t: Transaction) => t.tipe === "setoran").reduce((a: number, t: Transaction) => a + t.total, 0);
+    const tp = myTransactions.filter((t: Transaction) => t.tipe === "penarikan").reduce((a: number, t: Transaction) => a + t.total, 0);
+    setTotalSetoran(ts);
+    setTotalPenarikan(tp);
+  }, [router]);
 
   const handlePenarikan = () => {
-    if (!jumlahPenarikan || Number(jumlahPenarikan) <= 0 || Number(jumlahPenarikan) > saldo) return;
+    const jumlah = Number(jumlahPenarikan);
+    if (!jumlah || jumlah <= 0 || jumlah > saldo || !userEmail) return;
+
+    // Simpan transaksi penarikan
+    const allTransactions = JSON.parse(localStorage.getItem("banksampah_transactions") || "[]");
+    const newTransaction: Transaction = {
+      id: Date.now(),
+      tanggal: formatTanggal(new Date()),
+      items: [{ nama: "Penarikan Saldo", berat: 0, harga: 0, subtotal: jumlah }],
+      total: jumlah,
+      status: "berhasil",
+      tipe: "penarikan",
+      userEmail,
+    };
+    allTransactions.push(newTransaction);
+    localStorage.setItem("banksampah_transactions", JSON.stringify(allTransactions));
+
+    // Kurangi saldo
+    const newSaldo = saldo - jumlah;
+    const user = JSON.parse(localStorage.getItem("banksampah_current_user") || "{}");
+    user.saldo = newSaldo;
+    localStorage.setItem("banksampah_current_user", JSON.stringify(user));
+
+    const users = JSON.parse(localStorage.getItem("banksampah_users") || "[]");
+    const updated = users.map((u: { email: string }) => u.email === userEmail ? { ...u, saldo: newSaldo } : u);
+    localStorage.setItem("banksampah_users", JSON.stringify(updated));
+
+    setSaldo(newSaldo);
+    setTotalPenarikan(totalPenarikan + jumlah);
     setShowSuccess(true);
     setShowPenarikan(false);
     setJumlahPenarikan("");
@@ -21,7 +83,6 @@ export default function SaldoPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      {/* Success Modal */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-scale-in">
@@ -30,23 +91,20 @@ export default function SaldoPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Penarikan Berhasil! 🎉</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Penarikan Berhasil!</h3>
             <p className="text-gray-500">Saldo akan ditransfer dalam 1x24 jam.</p>
           </div>
         </div>
       )}
 
-      {/* Header */}
       <div className="mb-8 animate-fade-in-up">
         <h1 className="text-2xl font-bold text-gray-900">Saldo Saya</h1>
         <p className="text-gray-500 mt-1">Kelola saldo dan penarikan dana</p>
       </div>
 
-      {/* Saldo Card */}
       <div className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-3xl p-6 sm:p-8 text-white mb-8 shadow-xl shadow-green-500/20 animate-fade-in-up relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
-
         <div className="relative">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -59,7 +117,6 @@ export default function SaldoPage() {
               </svg>
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-4">
               <div className="text-white/70 text-xs mb-1 font-medium">Total Setoran</div>
@@ -70,17 +127,13 @@ export default function SaldoPage() {
               <div className="font-bold text-lg">Rp {totalPenarikan.toLocaleString("id-ID")}</div>
             </div>
           </div>
-
-          <button
-            onClick={() => setShowPenarikan(true)}
-            className="mt-6 w-full bg-white text-green-600 py-3.5 rounded-xl font-semibold hover:bg-green-50 transition-all shadow-lg"
-          >
+          <button onClick={() => setShowPenarikan(true)} disabled={saldo <= 0}
+            className="mt-6 w-full bg-white text-green-600 py-3.5 rounded-xl font-semibold hover:bg-green-50 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
             Tarik Saldo
           </button>
         </div>
       </div>
 
-      {/* Penarikan Modal */}
       {showPenarikan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-3xl p-6 max-w-sm mx-4 w-full shadow-2xl animate-scale-in">
@@ -92,38 +145,23 @@ export default function SaldoPage() {
                 </svg>
               </button>
             </div>
-
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">Jumlah Penarikan</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">Rp</span>
-                <input
-                  type="number"
-                  value={jumlahPenarikan}
-                  onChange={(e) => setJumlahPenarikan(e.target.value)}
-                  placeholder="0"
-                  min="10000"
-                  max={saldo}
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                />
+                <input type="number" value={jumlahPenarikan} onChange={(e) => setJumlahPenarikan(e.target.value)}
+                  placeholder="0" min="10000" max={saldo}
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-right text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
               </div>
               <div className="flex justify-between mt-2 text-sm">
                 <span className="text-gray-500">Saldo tersedia: Rp {saldo.toLocaleString("id-ID")}</span>
-                <button
-                  onClick={() => setJumlahPenarikan(String(saldo))}
-                  className="text-green-600 font-semibold hover:text-green-700 transition-colors"
-                >
-                  Tarik Semua
-                </button>
+                <button onClick={() => setJumlahPenarikan(String(saldo))} className="text-green-600 font-semibold hover:text-green-700 transition-colors">Tarik Semua</button>
               </div>
             </div>
-
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-500">Jumlah penarikan</span>
-                <span className="font-medium text-gray-900">
-                  Rp {Number(jumlahPenarikan || 0).toLocaleString("id-ID")}
-                </span>
+                <span className="font-medium text-gray-900">Rp {Number(jumlahPenarikan || 0).toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-500">Biaya admin</span>
@@ -131,24 +169,13 @@ export default function SaldoPage() {
               </div>
               <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                 <span className="font-medium text-gray-900">Total diterima</span>
-                <span className="font-bold text-green-600 text-lg">
-                  Rp {Number(jumlahPenarikan || 0).toLocaleString("id-ID")}
-                </span>
+                <span className="font-bold text-green-600 text-lg">Rp {Number(jumlahPenarikan || 0).toLocaleString("id-ID")}</span>
               </div>
             </div>
-
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowPenarikan(false)}
-                className="flex-1 py-3 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handlePenarikan}
-                disabled={!jumlahPenarikan || Number(jumlahPenarikan) <= 0 || Number(jumlahPenarikan) > saldo}
-                className="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-sm shadow-green-500/25"
-              >
+              <button onClick={() => setShowPenarikan(false)} className="flex-1 py-3 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
+              <button onClick={handlePenarikan} disabled={!jumlahPenarikan || Number(jumlahPenarikan) <= 0 || Number(jumlahPenarikan) > saldo}
+                className="flex-1 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all shadow-sm shadow-green-500/25">
                 Konfirmasi
               </button>
             </div>
@@ -156,7 +183,6 @@ export default function SaldoPage() {
         </div>
       )}
 
-      {/* Informasi */}
       <div className="grid sm:grid-cols-2 gap-4 animate-fade-in-up">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
           <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mb-4 shadow-sm shadow-green-500/20">
@@ -167,7 +193,6 @@ export default function SaldoPage() {
           <h3 className="font-bold text-gray-900 mb-2">Cara Mendapatkan Saldo</h3>
           <p className="text-sm text-gray-500 leading-relaxed">Setorkan sampah ke bank sampah terdekat dan saldo akan otomatis bertambah sesuai berat dan jenis sampah.</p>
         </div>
-
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl flex items-center justify-center mb-4 shadow-sm shadow-blue-500/20">
             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

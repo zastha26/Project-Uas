@@ -107,9 +107,6 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-start gap-4">
-                <Link href="/auth" className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all hover:shadow-xl hover:shadow-green-500/25 hover:-translate-y-0.5">
-                  Mulai Sekarang
-                </Link>
                 <a href="#tentang" className="flex items-center gap-2 text-gray-600 hover:text-green-600 px-8 py-4 rounded-full font-semibold text-lg transition-colors border border-gray-200 hover:border-green-200">
                   Pelajari Lebih Lanjut
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
